@@ -1,0 +1,9 @@
+[Unit]
+Description=Daily backup
+
+[Timer]
+OnCalendar=weekly
+Persistent=true
+
+[Install]
+WantedBy=timers.target
