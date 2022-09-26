@@ -2,7 +2,7 @@
 Description=Daily backup
 
 [Timer]
-OnCalendar=weekly
+OnCalendar=Sun *-*-* 03:00:00
 Persistent=true
 
 [Install]
