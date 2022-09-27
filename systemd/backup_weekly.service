@@ -1,5 +1,5 @@
 [Unit]
-Description=A job to list /etc directory files
+Description=Weekly backup of the server
 
 [Service]
 Type=simple
