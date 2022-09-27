@@ -40,7 +40,7 @@ borg create                                     \
     /usr/local/bin                              \
     /usr/local/sbin                             \
     /srv                                        \
-    /opt >> /var/log/backup/$archive_name.log 2>&1
+    /opt >> /var/log/backup-daily/$archive_name.log 2>&1
 
 backup_exit=$?
 
@@ -56,7 +56,7 @@ borg prune                          \
     --glob-archives '{hostname}_*'  \
     --show-rc                       \
     --keep-daily    7               \
-    --keep-weekly   4 >> /var/log/backup/$archive_name.log 2>&1
+    --keep-weekly   4 >> /var/log/backup-daily/$archive_name.log 2>&1
 
 prune_exit=$?
 
