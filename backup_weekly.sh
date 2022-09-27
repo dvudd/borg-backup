@@ -8,9 +8,13 @@ if [ "$EUID" -ne 0 ]
 fi
 
 # Settings
-export BORG_REPO=/mnt/data/backup
+export BORG_REPO=/mnt/backup
 export BORG_PASSPHRASE=$(gpg --decrypt /etc/backups/borg.gpg)
+export OPENSSL_CONF=/etc/backups/openssl_allow_tls1.0.cnf
 archive_name=$(date +$HOSTNAME"_v"%U"_"%Y)
+nas="nas.local"
+nas_repo="/backup"
+login=$(gpg --decrypt /etc/backups/credentials.gpg)
 
 # Helpers and error handling:
 # Note: $XMPP_TARGET is a global variable leading to my XMPP address
@@ -21,7 +25,20 @@ trap 'echo $( date ) Backup interrupted >&2; exit 2' INT TERM
 info "Weekly backup: Starting"
 
 # Send magic packet to wake NAS then wait for it to become online
-wakeonlan MAC_ADDRESS
+ether-wake -i eth0 A0:21:B7:C1:D1:8E
+
+timeout 60 bash -c -- 'while ! ping -c 1 -n -w 1 $nas &> /dev/null; do sleep 1;done;'
+nas_exit=$?
+if [ $nas_exit -ne 0 ]; then
+    info "Weekly backup: NAS did not come online!"
+    xmpp "Weekly backup of $HOSTNAME finished with errors!!"
+    exit 2
+fi
+
+# Mount NAS drive
+sleep 5
+mount -t nfs $nas:$nas_repo $BORG_REPO
+sleep 5
 
 # Backup the most important directories into an archive named after
 # the machine this script is currently running on:
@@ -62,6 +79,12 @@ borg prune                          \
     --keep-monthly  6 >> /var/log/backup/$archive_name.log 2>&1
 
 prune_exit=$?
+
+# Unmount NAS drive and tell it to shut off
+umount $BORG_REPO
+sleep 5
+
+curl -u $login -k -d command=poweroff -d shutdown_option=1 -d OPERATION=set -d PAGE=System -d OUTER_TAB=tab_shutdown -d INNER_TAB=none https://$nas/get_handler &> /dev/null
 
 # use highest exit code as exit code
 global_exit=$(( backup_exit > prune_exit ? backup_exit : prune_exit ))
