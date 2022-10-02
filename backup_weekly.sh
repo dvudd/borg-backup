@@ -27,7 +27,7 @@ info "Weekly backup: Starting"
 # Send magic packet to wake NAS then wait for it to become online
 ether-wake -i eth0 A0:21:B7:C1:D1:8E
 
-timeout 60 bash -c -- 'while ! ping -c 1 -n -w 1 $nas &> /dev/null; do sleep 1;done;'
+timeout 60 bash -c -- "while ! ping -c 1 -n -w 1 $nas &> /dev/null; do sleep 1;done;"
 nas_exit=$?
 if [ $nas_exit -ne 0 ]; then
     info "Weekly backup: NAS did not come online!"
